@@ -1,6 +1,5 @@
 import streamlit as st
 import os
-import dotenv
 import uuid
 
 # check if it's linux so it works on Streamlit Cloud
@@ -18,7 +17,6 @@ from rag_methods import (
     stream_llm_rag_response,
 )
 
-dotenv.load_dotenv()
 
 if "AZ_OPENAI_API_KEY" not in os.environ:
     MODELS = [
@@ -53,12 +51,12 @@ if "rag_sources" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "user", "content": "Hello"},
-        {"role": "assistant", "content": "Hi there! How can I assist you today?"}
+        {"role": "assistant", "content": "Hi there! How can I assist you today?"} 
 ]
 
 
 
-default_openai_api_key = openai_api_key = st.secrets["api"]["openai_api_key"]
+default_openai_api_key = st.secrets["openai_api_key"]
 openai_api_key = default_openai_api_key
 
         
