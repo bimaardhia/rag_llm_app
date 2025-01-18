@@ -31,6 +31,8 @@ def stream_llm_response(llm_stream, messages):
         yield chunk
 
     st.session_state.messages.append({"role": "assistant", "content": response_message})
+    
+    return response_message
 
 
 # --- Indexing Phase ---
@@ -173,9 +175,14 @@ def get_conversational_rag_chain(llm):
 
 def stream_llm_rag_response(llm_stream, messages):
     conversation_rag_chain = get_conversational_rag_chain(llm_stream)
-    response_message = "*(RAG Response)*\n"
+    response_message = ""
+    
+    # Iterate through the streamed chunks
     for chunk in conversation_rag_chain.pick("answer").stream({"messages": messages[:-1], "input": messages[-1].content}):
         response_message += chunk
-        yield chunk
+        yield chunk  # Yielding the chunk as a string, not an object with a 'content' attribute
 
+    # Store the final response message in session state
     st.session_state.messages.append({"role": "assistant", "content": response_message})
+    
+    return response_message

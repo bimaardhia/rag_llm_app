@@ -15,7 +15,6 @@ from langchain.schema import HumanMessage, AIMessage
 
 from rag_methods import (
     load_doc_to_db, 
-    load_url_to_db,
     stream_llm_response,
     stream_llm_rag_response,
 )
@@ -147,15 +146,7 @@ else:
             on_change=load_doc_to_db,
             key="rag_docs",
         )
-
-        # URL input for RAG with websites
-        st.text_input(
-            "🌐 Introduce a URL", 
-            placeholder="https://example.com",
-            on_change=load_url_to_db,
-            key="rag_url",
-        )
-
+        
         with st.expander(f"📚 Documents in DB ({0 if not is_vector_db_loaded else len(st.session_state.rag_sources)})"):
             st.write([] if not is_vector_db_loaded else [source for source in st.session_state.rag_sources])
 
@@ -187,16 +178,17 @@ else:
             streaming=True,
         )
 
+    # Apply styling for all chat messages
     for message in st.session_state.messages:
         role = message["role"]
         content = message["content"]
 
-        # Tentukan atribut gaya berdasarkan peran
+        # Set style attributes based on role
         icon = "ai_icon.png" if role == "assistant" else "user_icon.png"
         bubble_class = "ai-bubble" if role == "assistant" else "human-bubble"
         row_class = "" if role == "assistant" else "row-reverse"
 
-        # HTML untuk setiap pesan
+        # HTML for each message
         div = f"""
         <div class="chat-row {row_class}">
             <img class="chat-icon" src="app/static/{icon}" width=32 height=32>
@@ -207,18 +199,48 @@ else:
         """
         st.markdown(div, unsafe_allow_html=True)
 
+# Main logic for handling the input and output in the UI
     if prompt := st.chat_input("Your message"):
+        # Immediately display the user message with custom style
+        div = f"""
+        <div class="chat-row row-reverse">
+            <img class="chat-icon" src="app/static/user_icon.png" width=32 height=32>
+            <div class="chat-bubble human-bubble">
+                &#8203;{prompt}
+            </div>
+        </div>
+        """
+        st.markdown(div, unsafe_allow_html=True)
+
+        # Add the user message to the session state
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
 
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            full_response = ""
+        # Handle assistant's response (with custom styling)
+        message_placeholder = st.empty()
+        full_response = ""
 
-            messages = [HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"]) for m in st.session_state.messages]
+        # Prepare messages for processing
+        messages = [HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"]) for m in st.session_state.messages]
 
-            if not st.session_state.use_rag:
-                st.write_stream(stream_llm_response(llm_stream, messages))
-            else:
-                st.write_stream(stream_llm_rag_response(llm_stream, messages))
+        # Get the assistant's response
+        if not st.session_state.use_rag:
+            assistant_response = stream_llm_response(llm_stream, messages)
+        else:
+            assistant_response = stream_llm_rag_response(llm_stream, messages)
+
+        # Since the response is a generator, we need to handle the output correctly
+        assistant_response_str = "".join([chunk.content if hasattr(chunk, 'content') else str(chunk) for chunk in assistant_response])
+
+        # Render assistant's message with custom style, only display once
+        assistant_div = f"""
+        <div class="chat-row">
+            <img class="chat-icon" src="app/static/ai_icon.png" width=32 height=32>
+            <div class="chat-bubble ai-bubble">
+                &#8203;{assistant_response_str}
+            </div>
+        </div>
+        """
+        st.markdown(assistant_div, unsafe_allow_html=True)
+
+    
+
