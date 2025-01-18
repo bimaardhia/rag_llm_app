@@ -84,6 +84,15 @@ with st.sidebar:
         st.session_state.openai_api_key = None
         az_openai_api_key = os.getenv("AZ_OPENAI_API_KEY")
         st.session_state.az_openai_api_key = az_openai_api_key
+        
+# Fungsi untuk memuat CSS
+def load_css():
+    with open("static/styles.css", "r") as f:
+        css = f"<style>{f.read()}</style>"
+        st.markdown(css, unsafe_allow_html=True)
+
+# Memuat CSS
+load_css()
 
 
 # --- Main Content ---
@@ -93,6 +102,8 @@ missing_anthropic = anthropic_api_key == "" or anthropic_api_key is None
 if missing_openai and missing_anthropic and ("AZ_OPENAI_API_KEY" not in os.environ):
     st.write("#")
     st.warning("⬅️ Please introduce an API Key to continue...")
+    
+
 
 else:
     # Sidebar
@@ -177,8 +188,24 @@ else:
         )
 
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        role = message["role"]
+        content = message["content"]
+
+        # Tentukan atribut gaya berdasarkan peran
+        icon = "ai_icon.png" if role == "assistant" else "user_icon.png"
+        bubble_class = "ai-bubble" if role == "assistant" else "human-bubble"
+        row_class = "" if role == "assistant" else "row-reverse"
+
+        # HTML untuk setiap pesan
+        div = f"""
+        <div class="chat-row {row_class}">
+            <img class="chat-icon" src="app/static/{icon}" width=32 height=32>
+            <div class="chat-bubble {bubble_class}">
+                &#8203;{content}
+            </div>
+        </div>
+        """
+        st.markdown(div, unsafe_allow_html=True)
 
     if prompt := st.chat_input("Your message"):
         st.session_state.messages.append({"role": "user", "content": prompt})
@@ -195,12 +222,3 @@ else:
                 st.write_stream(stream_llm_response(llm_stream, messages))
             else:
                 st.write_stream(stream_llm_rag_response(llm_stream, messages))
-
-
-with st.sidebar:
-    st.divider()
-    st.video("https://youtu.be/abMwFViFFhI")
-    st.write("📋[Medium Blog](https://medium.com/@enricdomingo/program-a-rag-llm-chat-app-with-langchain-streamlit-o1-gtp-4o-and-claude-3-5-529f0f164a5e)")
-    st.write("📋[GitHub Repo](https://github.com/enricd/rag_llm_app)")
-
-    
