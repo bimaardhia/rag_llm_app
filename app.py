@@ -56,8 +56,8 @@ if "messages" not in st.session_state:
 
 
 
-default_openai_api_key = st.secrets["OPENAI_API_KEY"]
-openai_api_key = default_openai_api_key
+openai_api_key = st.secrets["OPENAI_API_KEY"]
+st.session_state.openai_api_key = openai_api_key
 
         
 # Fungsi untuk memuat CSS

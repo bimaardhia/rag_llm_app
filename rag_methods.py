@@ -1,4 +1,5 @@
 import os
+import dotenv
 from time import time
 import streamlit as st
 
@@ -16,6 +17,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 
+dotenv.load_dotenv()
 
 os.environ["USER_AGENT"] = "myagent"
 DB_DOCS_LIMIT = 10
@@ -29,8 +31,6 @@ def stream_llm_response(llm_stream, messages):
         yield chunk
 
     st.session_state.messages.append({"role": "assistant", "content": response_message})
-    
-    return response_message
 
 
 # --- Indexing Phase ---
@@ -99,8 +99,8 @@ def load_url_to_db():
 
 
 def initialize_vector_db(docs):
-    embedding = OpenAIEmbeddings(api_key=st.secrets["OPENAI_API_KEY"])
-
+    embedding = OpenAIEmbeddings(api_key=st.session_state.openai_api_key)
+    
     vector_db = Chroma.from_documents(
         documents=docs,
         embedding=embedding,
@@ -165,14 +165,9 @@ def get_conversational_rag_chain(llm):
 
 def stream_llm_rag_response(llm_stream, messages):
     conversation_rag_chain = get_conversational_rag_chain(llm_stream)
-    response_message = ""
-    
-    # Iterate through the streamed chunks
+    response_message = "*(RAG Response)*\n"
     for chunk in conversation_rag_chain.pick("answer").stream({"messages": messages[:-1], "input": messages[-1].content}):
         response_message += chunk
-        yield chunk  # Yielding the chunk as a string, not an object with a 'content' attribute
+        yield chunk
 
-    # Store the final response message in session state
     st.session_state.messages.append({"role": "assistant", "content": response_message})
-    
-    return response_message
