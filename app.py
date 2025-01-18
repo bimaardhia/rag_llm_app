@@ -56,7 +56,7 @@ if "messages" not in st.session_state:
 
 
 
-default_openai_api_key = st.secrets["openai_api_key"]
+default_openai_api_key = st.secrets["OPENAI_API_KEY"]
 openai_api_key = default_openai_api_key
 
         
