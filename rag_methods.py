@@ -2,6 +2,7 @@ import os
 import dotenv
 from time import time
 import streamlit as st
+import random
 
 from langchain_community.document_loaders.text import TextLoader
 from langchain_community.document_loaders import (
@@ -13,8 +14,8 @@ from langchain_community.document_loaders import (
 from langchain_community.vectorstores import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, AzureOpenAIEmbeddings
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.chains import create_history_aware_retriever, create_retrieval_chain
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
+from langchain.chains import create_history_aware_retriever, create_retrieval_chain, LLMChain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 
 dotenv.load_dotenv()
@@ -171,3 +172,63 @@ def stream_llm_rag_response(llm_stream, messages):
         yield chunk
 
     st.session_state.messages.append({"role": "assistant", "content": response_message})
+
+
+# lat sol 
+
+
+def get_random_chunk(vector_db):
+    """
+    Mengambil satu chunk secara acak dari VectorDB.
+    """
+    retriever = vector_db.as_retriever()
+    docs = retriever.get_relevant_documents("random")  # Random query untuk mengambil dokumen
+    return random.choice(docs).page_content if docs else None
+
+def create_question_prompt_template():
+    """
+    Membuat template prompt untuk menghasilkan soal pilihan ganda.
+    """
+    return PromptTemplate(
+        input_variables=["context"],
+        template="""
+        Berdasarkan konteks berikut, buatlah sebuah soal pilihan ganda dengan empat opsi.
+        Sertakan:
+        - Pertanyaan
+        - Empat opsi jawaban
+        - Jawaban yang benar
+        - Penjelasan untuk jawaban yang benar
+        
+        Konteks:
+        {context}
+        
+        Format keluaran:
+        
+        **Pertanyaan:**  
+        ...
+
+        | **Pilihan** | **Jawaban**         |
+        |-------------|---------------------|
+        | **A.**      | ...                 |
+        | **B.**      | ...                 |
+        | **C.**      | ...                 |
+        | **D.**      | ...                 |
+
+        **Jawaban Benar:**  
+        ...
+
+        **Penjelasan:**  
+        ...
+        """
+    )
+
+def generate_question_from_chunk(llm, chunk):
+    """
+    Menggunakan LLM untuk menghasilkan soal pilihan ganda dari chunk yang diberikan.
+    """
+    if not chunk:
+        return "No data available to generate a question."
+    
+    prompt = create_question_prompt_template()
+    chain = LLMChain(llm=llm, prompt=prompt)
+    return chain.run({"context": chunk})
