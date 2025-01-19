@@ -126,11 +126,16 @@ if selected == "ChatBot":
             with cols0[1]:
                 st.button("Clear Chat", on_click=lambda: st.session_state.messages.clear(), type="primary")
 
-            st.header("RAG Sources:")
+            st.header("Materi:")
             
-            if st.button("Gunakan File Default: Kabinet Merah Putih"):
-                load_default_file(default_file_path)
-                st.rerun()
+            if "file_button_clicked" not in st.session_state:
+                st.session_state.file_button_clicked = False
+
+            if not st.session_state.file_button_clicked:
+                if st.button("Gunakan File Default: Kabinet Merah Putih"):
+                    load_default_file(default_file_path)
+                    st.session_state.file_button_clicked = True
+                    st.rerun()
                 
             # File upload input for RAG with documents
             st.file_uploader(
@@ -141,7 +146,7 @@ if selected == "ChatBot":
                 key="rag_docs",
             )
             
-            with st.expander(f"📚 Documents in DB ({0 if not is_vector_db_loaded else len(st.session_state.rag_sources)})"):
+            with st.expander(f"📚 Materi di DB ({0 if not is_vector_db_loaded else len(st.session_state.rag_sources)})"):
                 st.write([] if not is_vector_db_loaded else [source for source in st.session_state.rag_sources])
 
     if not is_vector_db_loaded:
@@ -249,12 +254,18 @@ if selected == "Latihan Soal":
             is_vector_db_loaded = ("vector_db" in st.session_state and st.session_state.vector_db is not None)
                 
 
-            st.header("RAG Sources:")
+            st.header("Materi:")
             
 
-            if st.button("Gunakan File Default: Kabinet Merah Putih"):
-                load_default_file(default_file_path)
-                st.rerun()
+            # Pastikan status tombol disimpan dalam session state
+            if "file_button_clicked" not in st.session_state:
+                st.session_state.file_button_clicked = False
+
+            if not st.session_state.file_button_clicked:
+                if st.button("Gunakan File Default: Kabinet Merah Putih"):
+                    load_default_file(default_file_path)
+                    st.session_state.file_button_clicked = True
+                    st.rerun()
 
                 
             # File upload input for RAG with documents
@@ -266,7 +277,7 @@ if selected == "Latihan Soal":
                 key="rag_docs",
             )
             
-            with st.expander(f"📚 Documents in DB ({0 if not is_vector_db_loaded else len(st.session_state.rag_sources)})"):
+            with st.expander(f"📚 Materi di DB ({0 if not is_vector_db_loaded else len(st.session_state.rag_sources)})"):
                 st.write([] if not is_vector_db_loaded else [source for source in st.session_state.rag_sources])
                 
             model_provider = st.session_state.model.split("/")[0]
