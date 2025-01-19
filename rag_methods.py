@@ -77,6 +77,34 @@ def load_doc_to_db():
             st.toast(f"Document *{str([doc_file.name for doc_file in st.session_state.rag_docs])[1:-1]}* loaded successfully.", icon="✅")
 
 
+def load_default_file(default_file_path):
+    if os.path.exists(default_file_path):
+        file_name = os.path.basename(default_file_path)
+        if file_name not in st.session_state.rag_sources:
+            docs = []
+            try:
+                if default_file_path.endswith(".pdf"):
+                    loader = PyPDFLoader(default_file_path)
+                elif default_file_path.endswith(".docx"):
+                    loader = Docx2txtLoader(default_file_path)
+                elif default_file_path.endswith((".txt", ".md")):
+                    loader = TextLoader(default_file_path)
+                else:
+                    st.warning(f"Default document type not supported: {file_name}")
+                    return
+
+                docs.extend(loader.load())
+                st.session_state.rag_sources.append(file_name)
+
+                if docs:
+                    _split_and_load_docs(docs)
+                    st.toast(f"Default document *{file_name}* loaded successfully.", icon="✅")
+            except Exception as e:
+                st.toast(f"Error loading default document {file_name}: {e}", icon="⚠️")
+                print(f"Error loading default document {file_name}: {e}")
+    else:
+        st.error("Default file not found. Please check the file path.")
+
 def load_url_to_db():
     if "rag_url" in st.session_state and st.session_state.rag_url:
         url = st.session_state.rag_url
@@ -140,7 +168,7 @@ def _get_context_retriever_chain(vector_db, llm):
     prompt = ChatPromptTemplate.from_messages([
         MessagesPlaceholder(variable_name="messages"),
         ("user", "{input}"),
-        ("user", "Given the above conversation, generate a search query to look up in order to get inforamtion relevant to the conversation, focusing on the most recent messages."),
+        ("user", "Berdasarkan percakapan di atas, buatlah kueri pencarian untuk mencari informasi yang relevan dengan percakapan, dengan fokus pada pesan-pesan terbaru."),
     ])
     retriever_chain = create_history_aware_retriever(llm, retriever, prompt)
 
@@ -152,9 +180,9 @@ def get_conversational_rag_chain(llm):
 
     prompt = ChatPromptTemplate.from_messages([
         ("system",
-        """You are a helpful assistant. You will have to answer to user's queries.
-        You will have some context to help with your answers, but now always would be completely related or helpful.
-        You can also use your knowledge to assist answering the user's queries.\n
+        """Kamu adalah asisten yang membantu. Kamu harus menjawab pertanyaan pengguna.
+        Kamu akan memiliki beberapa konteks untuk membantu menjawab, tetapi tidak selalu sepenuhnya relevan atau berguna.
+        Kamu juga dapat menggunakan pengetahuanmu untuk membantu menjawab pertanyaan pengguna.\n
         {context}"""),
         MessagesPlaceholder(variable_name="messages"),
         ("user", "{input}"),
@@ -166,7 +194,7 @@ def get_conversational_rag_chain(llm):
 
 def stream_llm_rag_response(llm_stream, messages):
     conversation_rag_chain = get_conversational_rag_chain(llm_stream)
-    response_message = "*(RAG Response)*\n"
+    response_message = ""
     for chunk in conversation_rag_chain.pick("answer").stream({"messages": messages[:-1], "input": messages[-1].content}):
         response_message += chunk
         yield chunk

@@ -33,8 +33,11 @@ from rag_methods import (
     stream_llm_response,
     stream_llm_rag_response,
     get_random_chunk, 
-    generate_question_from_chunk
+    generate_question_from_chunk,
+    load_default_file
 )
+
+default_file_path = "./docs/Kabinet Merah Putih.pdf"  # Path to your default file
 
 
 if "AZ_OPENAI_API_KEY" not in os.environ:
@@ -124,6 +127,10 @@ if selected == "ChatBot":
                 st.button("Clear Chat", on_click=lambda: st.session_state.messages.clear(), type="primary")
 
             st.header("RAG Sources:")
+            
+            if st.button("Gunakan File Default: Kabinet Merah Putih"):
+                load_default_file(default_file_path)
+                st.rerun()
                 
             # File upload input for RAG with documents
             st.file_uploader(
@@ -137,7 +144,9 @@ if selected == "ChatBot":
             with st.expander(f"📚 Documents in DB ({0 if not is_vector_db_loaded else len(st.session_state.rag_sources)})"):
                 st.write([] if not is_vector_db_loaded else [source for source in st.session_state.rag_sources])
 
-        
+    if not is_vector_db_loaded:
+        st.warning("Kamu belum upload Materi. Silakan upload dokumen terlebih dahulu.")
+    else:    
         # Main chat app
         model_provider = st.session_state.model.split("/")[0]
         if model_provider == "openai":
@@ -241,6 +250,12 @@ if selected == "Latihan Soal":
                 
 
             st.header("RAG Sources:")
+            
+
+            if st.button("Gunakan File Default: Kabinet Merah Putih"):
+                load_default_file(default_file_path)
+                st.rerun()
+
                 
             # File upload input for RAG with documents
             st.file_uploader(
@@ -269,7 +284,7 @@ if selected == "Latihan Soal":
     # Cek apakah VectorDB sudah dimuat
     is_vector_db_loaded = "vector_db" in st.session_state and st.session_state.vector_db is not None
     if not is_vector_db_loaded:
-        st.warning("VectorDB belum dimuat. Silakan muat dokumen terlebih dahulu.")
+        st.warning("Kamu belum upload Materi. Silakan upload dokumen terlebih dahulu.")
     else:
         # Tombol untuk menunjukkan soal yang ada di session_state
         # Tombol Generate Question
@@ -292,6 +307,3 @@ if selected == "Latihan Soal":
             st.markdown(st.session_state.generated_question)  # Menampilkan soal yang ada di session_state
 
 
-
-         # Menampilkan soal yang disimpan
- # Menampilkan soal yang disimpan
