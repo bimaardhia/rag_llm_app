@@ -87,6 +87,7 @@ load_css()
 with st.sidebar:
     if "AZ_OPENAI_API_KEY" not in os.environ:
         default_openai_api_key = os.getenv("OPENAI_API_KEY") if os.getenv("OPENAI_API_KEY") is not None else ""  # only for development environment, otherwise it should return None
+        with st.popover("🔐 OpenAI"):
             openai_api_key = st.text_input(
                 "Introduce your OpenAI API Key (https://platform.openai.com/)", 
                 value=default_openai_api_key, 
@@ -146,7 +147,7 @@ if selected == "ChatBot":
                 st.session_state.file_button_clicked = False
 
             if not st.session_state.file_button_clicked:
-                if st.button("Gunakan File Default: Kabinet Merah Putih"):
+                if st.button("Gunakan File Default: Kabinet Merah Putih.pdf"):
                     load_default_file(default_file_path)
                     st.session_state.file_button_clicked = True
                     st.rerun()
@@ -163,82 +164,82 @@ if selected == "ChatBot":
             with st.expander(f"📚 Materi di DB ({0 if not is_vector_db_loaded else len(st.session_state.rag_sources)})"):
                 st.write([] if not is_vector_db_loaded else [source for source in st.session_state.rag_sources])
 
-    if not is_vector_db_loaded:
-        st.warning("Kamu belum upload Materi. Silakan upload dokumen terlebih dahulu.")
-    else:    
-        # Main chat app
-        model_provider = st.session_state.model.split("/")[0]
-        if model_provider == "openai":
-            llm_stream = ChatOpenAI(
-                api_key=openai_api_key,
-                model_name=st.session_state.model.split("/")[-1],
-                temperature=0.3,
-                streaming=True,
-            )
+        if not is_vector_db_loaded:
+            st.warning("Kamu belum upload Materi. Silakan upload dokumen terlebih dahulu.")
+        else:    
+            # Main chat app
+            model_provider = st.session_state.model.split("/")[0]
+            if model_provider == "openai":
+                llm_stream = ChatOpenAI(
+                    api_key=openai_api_key,
+                    model_name=st.session_state.model.split("/")[-1],
+                    temperature=0.3,
+                    streaming=True,
+                )
 
-        # Apply styling for all chat messages
-        for message in st.session_state.messages:
-            role = message["role"]
-            content = message["content"]
+            # Apply styling for all chat messages
+            for message in st.session_state.messages:
+                role = message["role"]
+                content = message["content"]
 
-            # Set style attributes based on role
-            icon = "ai_icon.png" if role == "assistant" else "user_icon.png"
-            bubble_class = "ai-bubble" if role == "assistant" else "human-bubble"
-            row_class = "" if role == "assistant" else "row-reverse"
+                # Set style attributes based on role
+                icon = "ai_icon.png" if role == "assistant" else "user_icon.png"
+                bubble_class = "ai-bubble" if role == "assistant" else "human-bubble"
+                row_class = "" if role == "assistant" else "row-reverse"
 
-            # HTML for each message
-            div = f"""
-            <div class="chat-row {row_class}">
-                <img class="chat-icon" src="app/static/{icon}" width=32 height=32>
-                <div class="chat-bubble {bubble_class}">
-                    &#8203;{content}
+                # HTML for each message
+                div = f"""
+                <div class="chat-row {row_class}">
+                    <img class="chat-icon" src="app/static/{icon}" width=32 height=32>
+                    <div class="chat-bubble {bubble_class}">
+                        &#8203;{content}
+                    </div>
                 </div>
-            </div>
-            """
-            st.markdown(div, unsafe_allow_html=True)
+                """
+                st.markdown(div, unsafe_allow_html=True)
 
-    # Main logic for handling the input and output in the UI
-        if prompt := st.chat_input("Your message"):
-            # Immediately display the user message with custom style
-            div = f"""
-            <div class="chat-row row-reverse">
-                <img class="chat-icon" src="app/static/user_icon.png" width=32 height=32>
-                <div class="chat-bubble human-bubble">
-                    &#8203;{prompt}
+        # Main logic for handling the input and output in the UI
+            if prompt := st.chat_input("Your message"):
+                # Immediately display the user message with custom style
+                div = f"""
+                <div class="chat-row row-reverse">
+                    <img class="chat-icon" src="app/static/user_icon.png" width=32 height=32>
+                    <div class="chat-bubble human-bubble">
+                        &#8203;{prompt}
+                    </div>
                 </div>
-            </div>
-            """
-            st.markdown(div, unsafe_allow_html=True)
+                """
+                st.markdown(div, unsafe_allow_html=True)
 
-            # Add the user message to the session state
-            st.session_state.messages.append({"role": "user", "content": prompt})
+                # Add the user message to the session state
+                st.session_state.messages.append({"role": "user", "content": prompt})
 
-            # Handle assistant's response (with custom styling)
-            message_placeholder = st.empty()
-            full_response = ""
+                # Handle assistant's response (with custom styling)
+                message_placeholder = st.empty()
+                full_response = ""
 
-            # Prepare messages for processing
-            messages = [HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"]) for m in st.session_state.messages]
+                # Prepare messages for processing
+                messages = [HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"]) for m in st.session_state.messages]
 
-            # Get the assistant's response
-            if not st.session_state.use_rag:
-                assistant_response = stream_llm_response(llm_stream, messages)
-            else:
-                assistant_response = stream_llm_rag_response(llm_stream, messages)
+                # Get the assistant's response
+                if not st.session_state.use_rag:
+                    assistant_response = stream_llm_response(llm_stream, messages)
+                else:
+                    assistant_response = stream_llm_rag_response(llm_stream, messages)
 
-            # Since the response is a generator, we need to handle the output correctly
-            assistant_response_str = "".join([chunk.content if hasattr(chunk, 'content') else str(chunk) for chunk in assistant_response])
+                # Since the response is a generator, we need to handle the output correctly
+                assistant_response_str = "".join([chunk.content if hasattr(chunk, 'content') else str(chunk) for chunk in assistant_response])
 
-            # Render assistant's message with custom style, only display once
-            assistant_div = f"""
-            <div class="chat-row">
-                <img class="chat-icon" src="app/static/ai_icon.png" width=32 height=32>
-                <div class="chat-bubble ai-bubble">
-                    &#8203;{assistant_response_str}
+                # Render assistant's message with custom style, only display once
+                assistant_div = f"""
+                <div class="chat-row">
+                    <img class="chat-icon" src="app/static/ai_icon.png" width=32 height=32>
+                    <div class="chat-bubble ai-bubble">
+                        &#8203;{assistant_response_str}
+                    </div>
                 </div>
-            </div>
-            """
-            st.markdown(assistant_div, unsafe_allow_html=True)
+                """
+                st.markdown(assistant_div, unsafe_allow_html=True)
 
 if selected == "Latihan Soal":
     missing_openai = openai_api_key == "" or openai_api_key is None or "sk-" not in openai_api_key
@@ -276,7 +277,7 @@ if selected == "Latihan Soal":
                 st.session_state.file_button_clicked = False
 
             if not st.session_state.file_button_clicked:
-                if st.button("Gunakan File Default: Kabinet Merah Putih"):
+                if st.button("Gunakan File Default: Kabinet Merah Putih.pdf"):
                     load_default_file(default_file_path)
                     st.session_state.file_button_clicked = True
                     st.rerun()
@@ -307,28 +308,28 @@ if selected == "Latihan Soal":
     
 # Cek apakah VectorDB sudah dimuat
     # Cek apakah VectorDB sudah dimuat
-    is_vector_db_loaded = "vector_db" in st.session_state and st.session_state.vector_db is not None
-    if not is_vector_db_loaded:
-        st.warning("Kamu belum upload Materi. Silakan upload dokumen terlebih dahulu.")
-    else:
-        # Tombol untuk menunjukkan soal yang ada di session_state
-        # Tombol Generate Question
-        if st.button("Generate Question"):
-            chunk = get_random_chunk(st.session_state.vector_db)
-            if chunk:
-                # Generate question dari chunk
-                question = generate_question_from_chunk(llm_stream, chunk)
+        is_vector_db_loaded = "vector_db" in st.session_state and st.session_state.vector_db is not None
+        if not is_vector_db_loaded:
+            st.warning("Kamu belum upload Materi. Silakan upload dokumen terlebih dahulu.")
+        else:
+            # Tombol untuk menunjukkan soal yang ada di session_state
+            # Tombol Generate Question
+            if st.button("Generate Question"):
+                chunk = get_random_chunk(st.session_state.vector_db)
+                if chunk:
+                    # Generate question dari chunk
+                    question = generate_question_from_chunk(llm_stream, chunk)
 
-                # Gantikan soal yang lama dengan soal yang baru di session_state
-                st.session_state.generated_question = question  # Gantikan soal di session_state
+                    # Gantikan soal yang lama dengan soal yang baru di session_state
+                    st.session_state.generated_question = question  # Gantikan soal di session_state
 
-                # Tampilkan soal yang dihasilkan
-                st.markdown(question)  # Menampilkan soal dalam format Markdown
-            else:
-                st.warning("Tidak ada data untuk menghasilkan soal.")
+                    # Tampilkan soal yang dihasilkan
+                    st.markdown(question)  # Menampilkan soal dalam format Markdown
+                else:
+                    st.warning("Tidak ada data untuk menghasilkan soal.")
 
-        # Jika soal sudah ada di session_state, tampilkan soal yang disimpan
-        elif "generated_question" in st.session_state:
-            st.markdown(st.session_state.generated_question)  # Menampilkan soal yang ada di session_state
+            # Jika soal sudah ada di session_state, tampilkan soal yang disimpan
+            elif "generated_question" in st.session_state:
+                st.markdown(st.session_state.generated_question)  # Menampilkan soal yang ada di session_state
 
 
