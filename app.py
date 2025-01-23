@@ -87,7 +87,6 @@ load_css()
 with st.sidebar:
     if "AZ_OPENAI_API_KEY" not in os.environ:
         default_openai_api_key = os.getenv("OPENAI_API_KEY") if os.getenv("OPENAI_API_KEY") is not None else ""  # only for development environment, otherwise it should return None
-        with st.popover("🔐 OpenAI"):
             openai_api_key = st.text_input(
                 "Introduce your OpenAI API Key (https://platform.openai.com/)", 
                 value=default_openai_api_key, 
