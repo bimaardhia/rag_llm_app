@@ -168,7 +168,7 @@ def _get_context_retriever_chain(vector_db, llm):
     prompt = ChatPromptTemplate.from_messages([
         MessagesPlaceholder(variable_name="messages"),
         ("user", "{input}"),
-        ("user", "Berdasarkan percakapan di atas, buatlah kueri pencarian untuk mencari informasi yang relevan dengan percakapan, dengan fokus pada pesan-pesan terbaru."),
+        ("user", "Based on the conversation above, create a search query to find information relevant to the conversation, focusing on the latest messages."),
     ])
     retriever_chain = create_history_aware_retriever(llm, retriever, prompt)
 
@@ -180,9 +180,9 @@ def get_conversational_rag_chain(llm):
 
     prompt = ChatPromptTemplate.from_messages([
         ("system",
-        """Kamu adalah asisten yang membantu. Kamu harus menjawab pertanyaan pengguna.
-        Kamu akan memiliki beberapa konteks untuk membantu menjawab, tetapi tidak selalu sepenuhnya relevan atau berguna.
-        Kamu juga dapat menggunakan pengetahuanmu untuk membantu menjawab pertanyaan pengguna.\n
+        """You are an assistant who helps. You must answer the user's questions.  
+        You will have some context to help answer, but it may not always be fully relevant or useful.  
+        You can also use your knowledge to help answer the user's questions. \n
         {context}"""),
         MessagesPlaceholder(variable_name="messages"),
         ("user", "{input}"),
@@ -207,7 +207,7 @@ def stream_llm_rag_response(llm_stream, messages):
 
 def get_random_chunk(vector_db):
     """
-    Mengambil satu chunk secara acak dari VectorDB.
+    Retrieve a random chunk from VectorDB.
     """
     retriever = vector_db.as_retriever()
     docs = retriever.get_relevant_documents("random")  # Random query untuk mengambil dokumen
@@ -215,44 +215,45 @@ def get_random_chunk(vector_db):
 
 def create_question_prompt_template():
     """
-    Membuat template prompt untuk menghasilkan soal pilihan ganda.
+    Create a prompt template to generate multiple-choice questions.
     """
     return PromptTemplate(
         input_variables=["context"],
         template="""
-        Berdasarkan konteks berikut, buatlah sebuah soal pilihan ganda dengan empat opsi.
-        Sertakan:
-        - Pertanyaan
-        - Empat opsi jawaban
-        - Jawaban yang benar
-        - Penjelasan untuk jawaban yang benar
+        Based on the following context, create a multiple-choice question with four options.
+        Include:
+        - The question
+        - Four answer options
+        - The correct answer
+        - An explanation for the correct answer
         
-        Konteks:
+        Context:
         {context}
         
-        Format keluaran:
+        Output format:
         
-        **Pertanyaan:**  
+        **Question:**  
         ...
 
-        | **Pilihan** | **Jawaban**         |
+        | **Option**  | **Answer**          |
         |-------------|---------------------|
         | **A.**      | ...                 |
         | **B.**      | ...                 |
         | **C.**      | ...                 |
         | **D.**      | ...                 |
 
-        **Jawaban Benar:**  
+        **Correct Answer:**  
         ...
 
-        **Penjelasan:**  
+        **Explanation:**  
         ...
+
         """
     )
 
 def generate_question_from_chunk(llm, chunk):
     """
-    Menggunakan LLM untuk menghasilkan soal pilihan ganda dari chunk yang diberikan.
+    Use LLM to generate a multiple-choice question based on the given chunk.
     """
     if not chunk:
         return "No data available to generate a question."

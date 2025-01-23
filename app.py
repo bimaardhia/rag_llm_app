@@ -12,7 +12,7 @@ st.set_page_config(
 with st.sidebar:
     selected = option_menu(
                 menu_title=None,  # required
-                options=["ChatBot", "Latihan Soal"],  # required
+                options=["ChatBot", "Practice Questions"],  # required
                 icons=["robot", "journal-bookmark-fill"],  # optional
                 menu_icon="cast",  # optional
                 default_index=0,  # optional
@@ -66,8 +66,8 @@ if "rag_sources" not in st.session_state:
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "user", "content": "Hallo"},
-        {"role": "assistant", "content": "Hi! Ada yang bisa saya bantu?"} 
+        {"role": "user", "content": "Hello"},
+        {"role": "assistant", "content": "Hi there! How can I assist you today?"} 
 ]
 
 
@@ -89,7 +89,7 @@ with st.sidebar:
         default_openai_api_key = os.getenv("OPENAI_API_KEY") if os.getenv("OPENAI_API_KEY") is not None else ""  # only for development environment, otherwise it should return None
         with st.popover("🔐 OpenAI"):
             openai_api_key = st.text_input(
-                "Masukkan OpenAI API Key Anda (https://platform.openai.com/)", 
+                "Introduce your OpenAI API Key (https://platform.openai.com/)", 
                 value=default_openai_api_key, 
                 type="password",
                 key="openai_api_key",
@@ -108,7 +108,7 @@ if selected == "ChatBot":
     missing_openai = openai_api_key == "" or openai_api_key is None or "sk-" not in openai_api_key
     if missing_openai:
         st.write("#")
-        st.warning("⬅️ Silakan masukkan API Key untuk melanjutkan...")
+        st.warning("⬅️ Please introduce an API Key to continue...")
         
 
 
@@ -123,7 +123,7 @@ if selected == "ChatBot":
 
 
             st.selectbox(
-                "🤖 Pilih Model", 
+                "🤖 Select a Model", 
                 options=models,
                 key="model",
             )
@@ -132,40 +132,40 @@ if selected == "ChatBot":
             with cols0[0]:
                 is_vector_db_loaded = ("vector_db" in st.session_state and st.session_state.vector_db is not None)
                 st.toggle(
-                    "Gunakan RAG", 
+                    "Use RAG", 
                     value=is_vector_db_loaded, 
                     key="use_rag", 
                     disabled=not is_vector_db_loaded,
                 )
 
             with cols0[1]:
-                st.button("Hapus Percakapan", on_click=lambda: st.session_state.messages.clear(), type="primary")
+                st.button("Clear Chat", on_click=lambda: st.session_state.messages.clear(), type="primary")
 
-            st.header("Materi:")
+            st.header("Materials:")
             
             if "file_button_clicked" not in st.session_state:
                 st.session_state.file_button_clicked = False
 
             if not st.session_state.file_button_clicked:
-                if st.button("Gunakan File Default: Kabinet Merah Putih.pdf"):
+                if st.button("Use Default File: Kabinet Merah Putih.pdf"):
                     load_default_file(default_file_path)
                     st.session_state.file_button_clicked = True
                     st.rerun()
                 
             # File upload input for RAG with documents
             st.file_uploader(
-                "📄 Unggah dokument", 
+                "📄 Upload a document", 
                 type=["pdf", "txt", "docx", "md"],
                 accept_multiple_files=True,
                 on_change=load_doc_to_db,
                 key="rag_docs",
             )
             
-            with st.expander(f"📚 Materi dalam DB ({0 if not is_vector_db_loaded else len(st.session_state.rag_sources)})"):
+            with st.expander(f"📚 Materials in DB ({0 if not is_vector_db_loaded else len(st.session_state.rag_sources)})"):
                 st.write([] if not is_vector_db_loaded else [source for source in st.session_state.rag_sources])
 
         if not is_vector_db_loaded:
-            st.warning("Anda belum mengunggah materi. Silakan unggah dokumen terlebih dahulu.")
+            st.warning("No materials uploaded. Please upload a document first.")
         else:    
             # Main chat app
             model_provider = st.session_state.model.split("/")[0]
@@ -241,11 +241,11 @@ if selected == "ChatBot":
                 """
                 st.markdown(assistant_div, unsafe_allow_html=True)
 
-if selected == "Latihan Soal":
+if selected == "Practice Questions":
     missing_openai = openai_api_key == "" or openai_api_key is None or "sk-" not in openai_api_key
     if missing_openai:
         st.write("#")
-        st.warning("⬅️ Silakan masukkan API Key untuk melanjutkan...")
+        st.warning("⬅️ Please introduce an API Key to continue...")
         
 
 
@@ -260,7 +260,7 @@ if selected == "Latihan Soal":
 
 
             st.selectbox(
-                "🤖 Pilih Model", 
+                "🤖 Select a Model", 
                 options=models,
                 key="model",
             )
@@ -269,7 +269,7 @@ if selected == "Latihan Soal":
             is_vector_db_loaded = ("vector_db" in st.session_state and st.session_state.vector_db is not None)
                 
 
-            st.header("Materi:")
+            st.header("Materials:")
             
 
             # Pastikan status tombol disimpan dalam session state
@@ -277,7 +277,7 @@ if selected == "Latihan Soal":
                 st.session_state.file_button_clicked = False
 
             if not st.session_state.file_button_clicked:
-                if st.button("Gunakan File Default: Kabinet Merah Putih.pdf"):
+                if st.button("Use Default File: Kabinet Merah Putih.pdf"):
                     load_default_file(default_file_path)
                     st.session_state.file_button_clicked = True
                     st.rerun()
@@ -285,14 +285,14 @@ if selected == "Latihan Soal":
                 
             # File upload input for RAG with documents
             st.file_uploader(
-                "📄 Unggah dokumen", 
+                "📄 Upload a document", 
                 type=["pdf", "txt", "docx", "md"],
                 accept_multiple_files=True,
                 on_change=load_doc_to_db,
                 key="rag_docs",
             )
             
-            with st.expander(f"📚 Materi dalam DB ({0 if not is_vector_db_loaded else len(st.session_state.rag_sources)})"):
+            with st.expander(f"📚 Materials in DB ({0 if not is_vector_db_loaded else len(st.session_state.rag_sources)})"):
                 st.write([] if not is_vector_db_loaded else [source for source in st.session_state.rag_sources])
                 
             model_provider = st.session_state.model.split("/")[0]
@@ -310,11 +310,11 @@ if selected == "Latihan Soal":
     # Cek apakah VectorDB sudah dimuat
         is_vector_db_loaded = "vector_db" in st.session_state and st.session_state.vector_db is not None
         if not is_vector_db_loaded:
-            st.warning("Anda belum mengunggah materi. Silakan unggah dokumen terlebih dahulu.")
+            st.warning("No materials uploaded. Please upload a document first.")
         else:
             # Tombol untuk menunjukkan soal yang ada di session_state
             # Tombol Generate Question
-            if st.button("Buat Soal"):
+            if st.button("Generate Question"):
                 chunk = get_random_chunk(st.session_state.vector_db)
                 if chunk:
                     # Generate question dari chunk
@@ -326,7 +326,7 @@ if selected == "Latihan Soal":
                     # Tampilkan soal yang dihasilkan
                     st.markdown(question)  # Menampilkan soal dalam format Markdown
                 else:
-                    st.warning("Tidak ada data untuk menghasilkan soal.")
+                    st.warning("No data available to generate questions.")
 
             # Jika soal sudah ada di session_state, tampilkan soal yang disimpan
             elif "generated_question" in st.session_state:
