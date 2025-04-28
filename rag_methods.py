@@ -180,9 +180,9 @@ def get_conversational_rag_chain(llm):
 
     prompt = ChatPromptTemplate.from_messages([
         ("system",
-        """You are an assistant who helps. You must answer the user's questions.  
-        You will have some context to help answer, but it may not always be fully relevant or useful.  
-        You can also use your knowledge to help answer the user's questions. \n
+        """You are a helpful chatbot assistant. When responding to the user's question, avoid directly stating the definitive answer. Instead, guide the user on how they can find the answer themselves based on the provided context. If the question cannot be answered using the provided context, do not attempt to answer.
+
+        Context:
         {context}"""),
         MessagesPlaceholder(variable_name="messages"),
         ("user", "{input}"),
