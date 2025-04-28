@@ -220,34 +220,35 @@ def create_question_prompt_template():
     return PromptTemplate(
         input_variables=["context"],
         template="""
-        Based on the following context, create a multiple-choice question with four options.
+As a teacher, your task is to create a multiple-choice question with four options based on the following context. Ensure the explanation for the correct answer is accurate and clearly explains why each of the other options is incorrect, one by one.
+
+Based on the following context, create a multiple-choice question with four options.
         Include:
         - The question
         - Four answer options
         - The correct answer
         - An explanation for the correct answer
-        
+
         Context:
         {context}
-        
+
         Output format:
-        
-        **Question:**  
+
+        **Question:**
         ...
 
-        | **Option**  | **Answer**          |
+        | **Option** | **Answer** |
         |-------------|---------------------|
-        | **A.**      | ...                 |
-        | **B.**      | ...                 |
-        | **C.**      | ...                 |
-        | **D.**      | ...                 |
+        | **A.** | ...                 |
+        | **B.** | ...                 |
+        | **C.** | ...                 |
+        | **D.** | ...                 |
 
-        **Correct Answer:**  
+        **Correct Answer:**
         ...
 
-        **Explanation:**  
+        **Explanation:**
         ...
-
         """
     )
 
