@@ -180,13 +180,14 @@ def get_conversational_rag_chain(llm):
 
     prompt = ChatPromptTemplate.from_messages([
         ("system",
-        """You are a helpful chatbot assistant. When responding to the user's question, avoid directly stating the definitive answer. Instead, guide the user on how they can find the answer themselves based on the provided context. If the question cannot be answered using the provided context, do not attempt to answer.
+        """You are a teacher helping your student learn. When responding to the user's question, guide the student through the steps needed to solve the problem, explaining each part clearly and systematically. Do not give the final answer. Use the provided context to support the explanation, but do not explicitly mention the context.
 
         Context:
         {context}"""),
         MessagesPlaceholder(variable_name="messages"),
         ("user", "{input}"),
     ])
+
     stuff_documents_chain = create_stuff_documents_chain(llm, prompt)
 
     return create_retrieval_chain(retriever_chain, stuff_documents_chain)
