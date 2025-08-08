@@ -4,7 +4,7 @@ import uuid
 from streamlit_option_menu import option_menu
 
 st.set_page_config(
-    page_title="Shifu AI", 
+    page_title="Tutor AI", 
     page_icon="📚", 
     layout="centered", 
     initial_sidebar_state="expanded"
