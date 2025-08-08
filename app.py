@@ -54,7 +54,7 @@ else:
 
 
 # --- Header ---
-st.html("""<h2 style="text-align: center;">📚🔍 <i> Shifu AI </i> 🤖💬</h2>""")
+st.html("""<h2 style="text-align: center;">📚🔍 <i> Tutor AI </i> 🤖💬</h2>""")
 
 
 # --- Initial Setup ---
